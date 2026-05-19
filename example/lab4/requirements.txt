@@ -1,0 +1,9 @@
+numpy
+pyarrow
+tiktoken
+transformers
+docling
+lancedb
+tenacity
+ipywidgets
+mistralai>=1.0.0,<2.0.0
