@@ -1,5 +1,4 @@
 from bot.services.lancedb_service import LanceDBService
-from bot.services.llm_service import LLMService
 from bot.services.web_search_service import WebSearchService
 
 
@@ -8,24 +7,39 @@ class ReActAgent:
         self.memory_service = memory_service
         self.docs = LanceDBService()
         self.web = WebSearchService()
-        self.llm = LLMService()
 
     async def run(self, user_id: int, query: str) -> str:
-        lower = query.lower().strip()
-
-        if lower in {"вопрос по компас-3d", "поиск в документации", "спросить react-агента"}:
-            lower = "как создать деталь в компас-3d"
-            query = lower
-
+        lower = query.lower()
         if any(word in lower for word in ["сегодня", "новости", "актуально", "интернет"]):
-            source = "web_search"
             observations = await self.web.web_search(query)
+            source = "web_search"
         elif any(word in lower for word in ["помнишь", "ранее", "история"]):
-            source = "memory_search"
             observations = await self.memory_service.search(user_id, query)
+            source = "memory_search"
         else:
-            source = "search_kompas_docs"
             observations = await self.docs.search_kompas_docs(query)
+            source = "search_kompas_docs"
 
-        final = await self.llm.generate_answer(query=query, context=observations, source=source)
-        return f"Инструмент: {source}\n\n{final}"
+        if not observations:
+            return (
+                f"Инструмент: {source}\n\n"
+                "Не нашёл релевантный контекст. Уточните запрос: добавьте тему, команду или версию КОМПАС-3D."
+            )
+
+        summary = self._compose_summary(query=query, observations=observations)
+        evidence = "\n".join(f"- {item}" for item in observations)
+        return f"Инструмент: {source}\n\n{summary}\n\nНайденные факты:\n{evidence}"
+
+    def _compose_summary(self, query: str, observations: list[str]) -> str:
+        key_points = []
+        for item in observations:
+            cleaned = item.split("]", 1)[-1].strip()
+            if cleaned and cleaned not in key_points:
+                key_points.append(cleaned)
+            if len(key_points) == 2:
+                break
+
+        if not key_points:
+            return f"По запросу '{query}' не удалось сформировать краткий вывод."
+
+        return f"По запросу '{query}' рекомендую опираться на: " + "; ".join(key_points) + "."
