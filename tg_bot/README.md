@@ -4,7 +4,7 @@ Telegram-бот на базе LLM с ReAct-агентом для обучени�
 
 ## Требования
 
-- Python 3.12.x
+- Python 3.12+
 - Telegram Bot Token
 
 ## Быстрый запуск
