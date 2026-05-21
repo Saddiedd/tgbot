@@ -22,8 +22,8 @@ async def main() -> None:
     bot = Bot(token=settings.telegram_bot_token, session=session)
     dp = Dispatcher()
 
-    memory_service = MemoryService()
-    answer_service = AnswerService(memory_service=memory_service)
+    memory_service = MemoryService(database_url=settings.database_url)
+    answer_service = AnswerService(memory_service=memory_service, settings=settings)
 
     dp.update.middleware(ServicesMiddleware(answer_service=answer_service, memory_service=memory_service))
 
