@@ -1,5 +1,7 @@
 from pydantic import Field
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from dotenv import dotenv_values
 
 
 class Settings(BaseSettings):
@@ -20,6 +22,18 @@ class Settings(BaseSettings):
     database_url: str = Field(default="sqlite+aiosqlite:///./data/bot.db", alias="DATABASE_URL")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 
+    @field_validator("telegram_bot_token")
+    @classmethod
+    def validate_telegram_bot_token(cls, value: str) -> str:
+        if not value or not value.strip():
+            raise ValueError("TELEGRAM_BOT_TOKEN must be set in .env")
+        return value.strip()
+
 
 def load_settings() -> Settings:
-    return Settings()
+    settings = Settings()
+    env_values = dotenv_values(".env")
+    file_token = (env_values.get("TELEGRAM_BOT_TOKEN") or "").strip()
+    if not file_token:
+        raise ValueError("TELEGRAM_BOT_TOKEN must be set in .env")
+    return settings

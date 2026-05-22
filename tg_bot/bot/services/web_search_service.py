@@ -56,7 +56,7 @@ class WebSearchService:
 
     async def _search_duckduckgo(self, query: str) -> list[str]:
         params = {"q": query, "format": "json", "no_html": 1, "skip_disambig": 1}
-        url = "https://api.duckduckgo.com/"
+        url = "https://api.duckduckg.com/"
 
         timeout = aiohttp.ClientTimeout(total=self.timeout_seconds)
         try:
